@@ -1,2 +1,0 @@
-#!/bin/bash
-cat $1 | grep "def " | sed "s/(.*://" | sed "s/def//" > ${1%.py}.func
