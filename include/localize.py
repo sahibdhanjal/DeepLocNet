@@ -8,9 +8,8 @@ import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 from include.dataStructures.particle import Particle
 
-
 class localize:
-    def __init__(self, numP, su, sz, distMap, mat, wayPts, R, start, dim, useClas, hardClas):
+    def __init__(self, numP, su, sz, distMap, mat, wayPts, R, dim, useClas, hardClas):
         self.np = numP
         self.sz = sz
         self.dists = distMap
@@ -20,7 +19,7 @@ class localize:
         self.nAP = mat.numAPs
         self.tx = mat.Tx
         self.R = R
-        self.start = start
+        self.start = self.wayPts[0]
         self.su = su
         self.path = []
         self.APLocs = []
@@ -28,7 +27,6 @@ class localize:
         self.use = useClas
         self.hard = hardClas
         if self.dim == 2: self.su = su[0:2]
-        if self.dim == 2: self.start = start[0:2]
 
     def print(self, samples):
         for i in range(self.np):
@@ -43,13 +41,14 @@ class localize:
     def MSE(self):
         mse = 0
         for i in range(len(self.pts)):
-            mse += self.distance(self.wayPts[i], self.path[i])
+            mse += self.distance(self.wayPts[i], self.path[i])**2
+        mse = mse/len(self.pts)
         return mse
 
     def distrib(self):
-        samples = []
-        if self.dim == 2: start = [self.start[0], self.start[1]]
-        if self.dim == 3: start = self.start
+        start = self.wayPts[0] ; samples = []
+        if self.dim == 2: start = [start[0], start[1]]
+        if self.dim == 3: start = start
         for _ in range(self.np):
             samples.append(Particle(start, 1/self.np))
         return samples
@@ -99,7 +98,8 @@ class localize:
             dx = point[0] - normrnd(0, su[0])
             dy = point[1] - normrnd(0, su[1])
             if self.dim == 2: pose = [samples[i].pose[0] + dx, samples[i].pose[1] + dy]
-            if self.dim == 3: dz = point[2] - normrnd(0, su[2]) ; pose = [samples[i].pose[0] + dx, samples[i].pose[1] + dy, samples[i].pose[2] + dz]
+            if self.dim == 3: dz = point[2] - normrnd(0, su[2])
+            if self.dim == 3: pose = [samples[i].pose[0] + dx, samples[i].pose[1] + dy, samples[i].pose[2] + dz]
             samples[i].pose = pose
 
     '''
@@ -341,7 +341,7 @@ class localize:
     The main Particle filter class
     '''
     def particleFilter(self):
-        self.path.append(self.start)
+        self.path.append(self.wayPts[0])
         samples = self.distrib()
         for i in range(len(self.pts)):
             # provide action update
@@ -361,7 +361,7 @@ class localize:
     The main Fast SLAM v1 class
     '''
     def FastSLAM(self):
-        self.path.append(self.start)
+        self.path.append(self.wayPts[0])
         samples = self.distrib()
 
         for i in range(len(self.pts)):

@@ -101,15 +101,15 @@ hardClas    = args.hard                                     # use soft vs hard c
 slam        = args.slam                                     # use fast slam or particle filter
 
 # Run the localization algorithms
-localizer = localize(numP, sigU, sigZ, dists, mat, wayPts, senseR, start, dim, useClas, hardClas)
+localizer = localize(numP, sigU, sigZ, dists, mat, wayPts, senseR, dim, useClas, hardClas)
 
 if slam==1:
     localizer.FastSLAM()
+    print("The MSE in the localized path is:", localizer.MSE())
     if dim == 2: mat.visualize(start, goal, wayPts, localizer.path, localizer.APLocs, localizer.IDs)
     if dim == 3: mat.visualize3D(start, goal, wayPts, localizer.path, localizer.APLocs, localizer.IDs)
 else:
     localizer.particleFilter()
+    print("The MSE in the localized path is:", localizer.MSE())
     if dim == 2: mat.visualize(start, goal, wayPts, localizer.path)
     if dim == 3: mat.visualize3D(start, goal, wayPts, localizer.path)
-
-print("The MSE in the localized path is:", localizer.MSE())

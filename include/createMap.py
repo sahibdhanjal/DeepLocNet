@@ -4,6 +4,7 @@ from pylayers.antprop.coverage import *
 from pdb import set_trace as bp
 from math import sqrt, floor, ceil
 import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
 
 class parseMap:
     def __init__(self, L, rows, cols):
@@ -223,6 +224,27 @@ class createMap:
         if goal : plt.plot(goal[1], goal[0], 'rs', markersize=6)
 
         plt.show()
+
+
+    def visual(self, start=None, goal=None, wayPts = None, path = None, TX = None, ID = None):
+        fig = plt.figure()
+        ax = fig.gca(projection='3d')
+        
+        if wayPts!=None:
+            x = [] ; y = [] ; z = []
+            for i in wayPts: x.append(i[0]) ; y.append(i[1]) ; z.append(i[2])
+            ax.plot(x, y, z, label='waypts')
+
+        if path!=None:
+            xp = [] ; yp = [] ; zp = []
+            for i in wayPts: xp.append(i[0]) ; yp.append(i[1]) ; zp.append(i[2])
+            ax.plot(xp, yp, zp, label='path')
+        ax.set_xlabel('x')
+        ax.set_ylabel('y')
+        ax.set_zlabel('z')
+        ax.legend()
+        plt.show()
+
 
     def visualize3D(self, start=None, goal=None, wayPts=None, path=None, TX=None, ID=None):
         if self.dim == 2: raise ValueError("Use visualize() instead of visualize3D() for 2 dimensions")
