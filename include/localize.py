@@ -1,15 +1,16 @@
-import math
+import math, torch
 import numpy as np
 from numpy.random import normal as normrnd
 from scipy.stats import multivariate_normal, norm
 from scipy.linalg import sqrtm, expm
 from pdb import set_trace as bp
+from include.DNN import DNN
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 from include.dataStructures.particle import Particle
 
 class localize:
-    def __init__(self, numP, su, sz, distMap, mat, wayPts, R, dim, useClas, hardClas):
+    def __init__(self, numP, su, sz, distMap, mat, wayPts, R, dim, useClas, hardClas, modelpath="./models/best.pth"):
         self.np = numP
         self.sz = sz
         self.dists = distMap
@@ -26,7 +27,10 @@ class localize:
         self.IDs = []
         self.use = useClas
         self.hard = hardClas
+        self.modelpath = modelpath
+        self.model = None
         if self.dim == 2: self.su = su[0:2]
+        if self.use: self.load_model()
 
     def print(self, samples):
         for i in range(self.np):
@@ -63,6 +67,26 @@ class localize:
             if self.dim==3: dz = pts[i][2] - pts[i-1][2] ; rtPts.append([dx, dy, dz])
         return rtPts
  
+    '''
+    load pytorch model and save dict
+    '''
+    def load_model(self):
+        model = DNN()
+        path = self.modelpath
+        checkpoint = torch.load(path)
+        model.load_state_dict(checkpoint['state_dict'])
+        self.model = model
+        self.model.eval()
+
+    '''
+    classify into LOS/NLOS
+    '''
+    def classify(self, rssi, euc):
+        inp = torch.tensor([rssi, euc])
+        out = self.model(inp.float())
+        pred = 1 if (out[1]>out[0]) else 0
+        return pred
+
     '''
     weighting using the normpdf subroutine
     '''
@@ -114,19 +138,17 @@ class localize:
                 tx = self.tx[j] ; pos = samples[i].pose
                 d = self.distance(tx, pos)
                 if d <= self.R:
-                    dz[j] = abs(z[j].rssi-d)
-                    '''
                     if self.use:
-                        label = self.classify(z[j].rssi, d)
-                        if label==0:
-                            if self.hard:
+                        if self.hard:
+                            label = self.classify(z[j].rssi, d)
+                            if label==0:
                                 dz[j] = abs(z[j].rssi-d)
-                            else:
-                                dz[j] = abs(z[j].rssi-d)
-
+                        else:
+                            inp = torch.tensor([z[j].rssi, d])
+                            out = self.model(inp.float()).detach().numpy()
+                            dz[j] = out[0]*abs(z[j].rssi-d) + out[1]*abs(z[j].rssi - normrnd(self.R,3))
                     else:
                         dz[j] = abs(z[j].rssi-d)
-                    '''
 
             wt = self.getWeight(dz)
             samples[i].w *= wt
@@ -171,7 +193,23 @@ class localize:
 
                         # update step
                         dHat = self.distance(pos, muHat)
-                        innov = abs(z[j].rssi-dHat)
+                        
+                        # use classifier or not
+                        if self.use:
+                            if self.hard:
+                                label = self.classify(z[j].rssi, dHat)
+                                if label==0:
+                                    innov = abs(z[j].rssi-dHat)
+                                else:
+                                    continue
+                            else:
+                                inp = torch.tensor([z[j].rssi, dHat])
+                                out = self.model(inp.float()).detach().numpy()
+                                innov = out[0]*abs(z[j].rssi - dHat) + out[1]*abs(z[j].rssi - normrnd(self.R,3))
+                        else:
+                            innov = abs(z[j].rssi - dHat)
+
+                        
                         dx = muHat[0] - pos[0] ; dy = muHat[1] - pos[1]
                         den = math.sqrt(dx**2 + dy**2)
                         H = np.array([dx/den, dy/den])

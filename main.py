@@ -1,7 +1,6 @@
 # basic includes
-import sys, h5py
+import sys
 import argparse
-import torch
 import numpy as np
 import matplotlib.pyplot as plt
 from random import random, randint
@@ -14,8 +13,6 @@ from include.createMap import createMap
 from include.rrtPlanner import calculatePath
 # include distance calculator
 from include.calculateDists import calculateDist
-# include classifier
-# from keras.models import load_model
 # include PF/Fast SLAM v1
 from include.localize import localize
 
@@ -82,11 +79,6 @@ wayPts = RRT.RRTSearch()
 distMap = calculateDist(wayPts, mat, dim)
 if dim == 2: dists = distMap.readDistances()
 if dim == 3: dists = distMap.readDistances3D()
-
-##############################################################
-# Load the trained Classifier
-##############################################################
-# model = load_model('stacked.pth')
 
 ##############################################################
 # Run Particle Filter / Fast SLAM v1 depending on choice

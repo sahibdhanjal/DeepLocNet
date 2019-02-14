@@ -8,21 +8,12 @@ from pdb import set_trace as bp
 #######################################################
 # Save/Load Model
 #######################################################
-def save_best_checkpoint(state, checkpoint):
+def save_checkpoint(state, checkpoint):
     filepath = os.path.join(checkpoint, 'best.pth')
     if not os.path.exists(checkpoint):
         print("Checkpoint Directory does not exist! Making directory {}".format(checkpoint))
         os.mkdir(checkpoint)
     torch.save(state, filepath)
-
-def save_all_checkpoint(state, is_best, checkpoint, epoch):
-    name = str(epoch)+'_stacked.pth'
-    filepath = os.path.join(checkpoint, name)
-    if not os.path.exists(checkpoint):
-        print("Checkpoint Directory does not exist! Making directory {}".format(checkpoint))
-        os.mkdir(checkpoint)
-    torch.save(state, filepath)
-    if is_best: shutil.copyfile(filepath, os.path.join(checkpoint, 'best.pth'))
 
 def load_checkpoint(checkpoint, model, optimizer=None):
     if not os.path.exists(checkpoint):
@@ -102,8 +93,8 @@ if __name__=="__main__":
     model = DNN().to(device)
     optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
     loss_func = torch.nn.MSELoss()
+    best_acc = 0
 
-    best_val_accuracy = 0
     # Start training
     for epoch in range(num_epoch):
         totalloss = 0
@@ -118,23 +109,10 @@ if __name__=="__main__":
         train_acc, val_acc = get_accuracy(model, train_loader, valid_loader, loss_func)
         val_loss = valid_model(model, valid_loader, loss_func)
         
-        print("epoch [{:03d}/{:03d}]: train_loss: {:.4f} | val_loss: {:.4f} | train_accuracy : {:.4f} |  val_accuracy : {:.4f}".format(epoch+1, num_epoch, totalloss, val_loss, train_acc, val_acc))
+        print("epoch [{:03d}/{:03d}]: train_loss: {:.4f} | val_loss: {:.4f} | train_acc : {:.4f} |  val_acc : {:.4f}".format(epoch+1, num_epoch, totalloss, val_loss, train_acc, val_acc))
         
-        state = {'epoch': epoch + 1, 'state_dict': model.state_dict(), 'optim_dict' : optimizer.state_dict()}
-        
-        # save the best checkpoints
-        if val_acc>best_val_accuracy: best = True
-        save_best_checkpoint(state, checkpoint="./models/")
-        if args.save: save_all_checkpoint(state, is_best=best, checkpoint="./models/", epoch=epoch)
-        best = False
-
+        state = {'epoch': epoch + 1, 'state_dict': model.state_dict(), 'optim_dict' : optimizer.state_dict(), 'loss': loss}
+        if val_acc>best_acc and args.save: save_checkpoint(state, checkpoint="./models/") ; best_acc = val_acc
     
     train_acc, test_acc = get_accuracy(model, train_loader, test_loader, loss_func)
     print("train_accuracy : {:.4f} |  test_accuracy : {:.4f}".format(train_acc, test_acc))
-
-    '''
-    input = torch.tensor([100,100])
-    input = input.to(device)
-    model.eval()
-    output = model(input.float())
-    '''
