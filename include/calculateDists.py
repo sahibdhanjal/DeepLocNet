@@ -94,6 +94,7 @@ class calculateDist:
         if abs(rssi) > 60: exp = (abs(rssi) - 32.44)/20
         else : exp = (abs(rssi) - 12.55)/20
         val = (10**exp) / 60
+        val = val if val<1e6 else 1e6
         return val
 
     def expConvert(self, dist):

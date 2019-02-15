@@ -27,22 +27,22 @@ class PylayersDataset(Dataset):
         return {'data':self.data[idx], 'label':self.label[idx]}
 
 class loadData:
-    def __init__(self, batch = 1024, val = 0.1, ratio=0.9, shuffle = True):
+    def __init__(self, batch = 1024, val = 0.1, ratio=0.9, shuffle = True, path = "assets/data/train.csv"):
         self.batch_size = batch
         self.ratio = ratio
         self.validation_split = val
         self.shuffle = shuffle
-        self.dataset = PylayersDataset()
+        self.dataset = PylayersDataset(path)
         self.size = len(self.dataset)
-    
+
     def process(self):
         idxs = list(range(self.size))
-        ttsplit = int(np.floor(self.ratio * self.size)) 
+        ttsplit = int(np.floor(self.ratio * self.size))
         tvsplit = int(np.floor(self.validation_split * ttsplit))
         if self.shuffle: np.random.shuffle(idxs)
         train_val_idxs, test_idxs = idxs[:ttsplit], idxs[ttsplit:]
         train_idxs, val_idxs = train_val_idxs[tvsplit:], train_val_idxs[:tvsplit]
-        
+
         train_sampler = SubsetRandomSampler(train_idxs)
         val_sampler = SubsetRandomSampler(val_idxs)
         test_sampler = SubsetRandomSampler(test_idxs)
@@ -50,5 +50,4 @@ class loadData:
         train_loader = DataLoader(self.dataset, batch_size=self.batch_size, sampler=train_sampler, num_workers=4)
         valid_loader = DataLoader(self.dataset, batch_size=self.batch_size, sampler=val_sampler, num_workers=4)
         test_loader = DataLoader(self.dataset, batch_size=self.batch_size, sampler=test_sampler, num_workers=4)
-
         return len(train_idxs), train_loader, valid_loader, test_loader
