@@ -50,4 +50,5 @@ class loadData:
         train_loader = DataLoader(self.dataset, batch_size=self.batch_size, sampler=train_sampler, num_workers=4)
         valid_loader = DataLoader(self.dataset, batch_size=self.batch_size, sampler=val_sampler, num_workers=4)
         test_loader = DataLoader(self.dataset, batch_size=self.batch_size, sampler=test_sampler, num_workers=4)
+        print("Data Loaded: Train Size: ", len(train_idxs), "  |  Validation Size: ", len(val_idxs), "  |  Test Size: ", len(test_idxs))
         return len(train_idxs), train_loader, valid_loader, test_loader
