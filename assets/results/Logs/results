@@ -1,0 +1,16 @@
+DIM 2:
+1. python main.py --R 15 --map 2 --dim 2 --slam 0 --useClas 0 --su 2                            - 112.0796
+2. python main.py --R 15 --map 2 --dim 2 --slam 1 --useClas 0 --su 2                            - 139.1380
+3. python main.py --R 15 --map 2 --dim 2 --slam 0 --useClas 1 --hard 0                          - 9.558961
+4. python main.py --R 15 --map 2 --dim 2 --slam 0 --useClas 1 --hard 1                          - 9.223576
+5. python main.py --R 15 --map 2 --dim 2 --slam 1 --useClas 1 --hard 0                          - 5.867568
+6. python main.py --R 15 --map 2 --dim 2 --slam 1 --useClas 1 --hard 1                          - 5.275986
+
+
+DIM 3:
+7. python main.py --R 15 --map 2 --dim 3 --slam 0 --useClas 0 --su 2                            - 134.82622
+8. python main.py --R 15 --map 2 --dim 3 --slam 1 --useClas 0 --su 2                            - 116.15345
+9. python main.py --R 15 --map 2 --dim 3 --slam 0 --useClas 1 --hard 0                          - 52.48513
+10. python main.py --R 15 --map 2 --dim 3 --slam 0 --useClas 1 --hard 1                         - 45.98744
+11. python main.py --R 15 --map 2 --dim 3 --slam 1 --useClas 1 --hard 0                         - 12.57768
+12. python main.py --R 15 --map 2 --dim 3 --slam 1 --useClas 1 --hard 1                         - 11.017999
