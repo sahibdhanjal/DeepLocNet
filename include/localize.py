@@ -45,7 +45,7 @@ class localize:
     def MSE(self):
         mse = 0
         for i in range(len(self.pts)):
-            mse += self.distance(self.wayPts[i], self.path[i])**2
+            mse += self.distance(self.wayPts[i], self.path[i])
         mse = mse/len(self.pts)
         return mse
 
