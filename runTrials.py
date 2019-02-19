@@ -17,14 +17,12 @@ from include.calculateDists import calculateDist
 # include PF/Fast SLAM v1
 from include.localize import localize
 
-# include real WiFi Scanner (optional)
-# from include.wifiScanner import *
-
 ##############################################################
 # Parse Arguments
 ##############################################################
 parser = argparse.ArgumentParser(description='Radio-Inertial Localization')
-parser.add_argument('--map', type=int, default=1, metavar='input blueprint (default: 1), range 1-15')
+parser.add_argument('--trials', type=int, default=10, metavar='trials', help='number of trials per selected map (default: 10)')
+parser.add_argument('--map', type=int, default=2, metavar='input blueprint (default: 2), range 1-15')
 parser.add_argument('--dim', type=int, default=2, metavar='dimension for localization (default: 2)')
 parser.add_argument('--z', type=int, default=2, metavar='maximum height of workspace (default: 2)')
 parser.add_argument('--np', type=int, default=3000, metavar='number of particles for localization (default: 3000)')
@@ -72,68 +70,50 @@ start = starts[mapID]                                       # start position for
 goal  = goals[mapID]                                        # goal position for random walk (chosen at random)
 step  = args.step                                           # step size of random walk
 
-RRT = calculatePath(start, goal, mat, step, dim, 10**args.iter)
-wayPts = RRT.RRTSearch()
 
-##############################################################
-# Calculate RSSI and Actual Distances
-##############################################################
-distMap = calculateDist(wayPts, mat, dim)
-if dim == 2: dists = distMap.readDistances()
-if dim == 3: dists = distMap.readDistances3D()
+for i in range(args.trials):
+    trialnum = 'trail'+str(i+1)+'.mat'
 
-##############################################################
-# Run Particle Filter / Fast SLAM v1 depending on choice
-##############################################################
-# Parameters for localization
-numP        = args.np                                       # number of particles used
-sigU        = [random()*su, random()*su, random()*su]       # motion model noise - typically a fraction of the step size
-sigZ        = ri(10,100, size=mat.numAPs)                   # measure model noise
-senseR      = args.R                                        # sensing range
-useClas     = args.useClas                                  # use of classifier or not
-hardClas    = args.hard                                     # use soft vs hard classification
-slam        = args.slam                                     # use fast slam or particle filter
+    RRT = calculatePath(start, goal, mat, step, dim, 10**args.iter)
+    wayPts = RRT.RRTSearch()
 
-# Run the localization algorithms
-localizer = localize(numP, sigU, sigZ, dists, mat, wayPts, senseR, dim, useClas, hardClas)
+    distMap = calculateDist(wayPts, mat, dim)
+    if dim == 2: dists = distMap.readDistances()
+    if dim == 3: dists = distMap.readDistances3D()
 
-if slam==1:
-    localizer.FastSLAM()
-    print("The MSE in the localized path is:", localizer.MSE())
-    print("The point-wise error in localization is: ",localizer.getCDF())
-    print("The LOS/NLOS counts are: ", distMap.printLNL())
-    if useClas: print("The confidence values are [TP, FP, TN, FN]: ",localizer.confidence)
+    numP        = args.np                                       # number of particles used
+    sigU        = [random()*su, random()*su, random()*su]       # motion model noise - typically a fraction of the step size
+    sigZ        = ri(10,100, size=mat.numAPs)                   # measure model noise
+    senseR      = args.R                                        # sensing range
+    useClas     = args.useClas                                  # use of classifier or not
+    hardClas    = args.hard                                     # use soft vs hard classification
+    slam        = args.slam                                     # use fast slam or particle filter
+
+    localizer = localize(numP, sigU, sigZ, dists, mat, wayPts, senseR, dim, useClas, hardClas)
+
+    if slam==1:
+        localizer.FastSLAM()
+    else:
+        localizer.particleFilter()
     
-    if dim == 2: mat.visualize(start, goal, wayPts, localizer.path, localizer.APLocs, localizer.IDs)
-    if dim == 3: mat.visualize3D(start, goal, wayPts, localizer.path, localizer.APLocs, localizer.IDs)
-else:
-    localizer.particleFilter()
-    print("The MSE in the localized path is:", localizer.MSE())
-    print("The point-wise error in localization is: ",localizer.getCDF())
-    print("The LOS/NLOS counts are: ", distMap.printLNL())
-    if useClas: print("The confidence values are [TP, FP, TN, FN]: ",localizer.confidence)
-
-    if dim == 2: mat.visualize(start, goal, wayPts, localizer.path)
-    if dim == 3: mat.visualize3D(start, goal, wayPts, localizer.path)
-    
-if args.savemat:
-    dic = {}
-    dic['dim'] = dim
-    dic['start'] = start
-    dic['goal'] = goal
-    dic['slam'] = slam
-    dic['mse'] = localizer.MSE()
-    dic['errors'] = localizer.getCDF()
-    dic['confidence'] = localizer.confidence
-    dic['lnl'] = distMap.LNL
-    dic['waypts'] = wayPts
-    dic['path'] = localizer.path
-    dic['sigu'] = sigU
-    dic['sigz'] = sigZ
-    dic['R'] = senseR
-    dic['Tx'] = mat.Tx
-    dic['map'] = mat.map
-    if slam==0: dic['TX'] = mat.Tx
-    if slam==1: dic['TX'] = localizer.APLocs
-    if slam==1: dic['TX_ids'] = localizer.IDs
-    sio.savemat('trial.mat', dic)
+    if args.savemat:
+        dic = {}
+        dic['dim'] = dim
+        dic['start'] = start
+        dic['goal'] = goal
+        dic['slam'] = slam
+        dic['mse'] = localizer.MSE()
+        dic['errors'] = localizer.getCDF()
+        dic['confidence'] = localizer.confidence
+        dic['lnl'] = distMap.LNL
+        dic['waypts'] = wayPts
+        dic['path'] = localizer.path
+        dic['sigu'] = sigU
+        dic['sigz'] = sigZ
+        dic['R'] = senseR
+        dic['Tx'] = mat.Tx
+        dic['map'] = mat.map
+        if slam==0: dic['TX'] = mat.Tx
+        if slam==1: dic['TX'] = localizer.APLocs
+        if slam==1: dic['TX_ids'] = localizer.IDs
+        sio.savemat(trialnum, dic)
