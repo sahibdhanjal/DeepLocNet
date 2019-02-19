@@ -18,6 +18,7 @@ class calculateDist:
         self.maxZ = mat.maxZ
         self.heights = []
         self.csv = savecsv
+        self.LNL = [0, 0]       # LOS, NLOS
         h = 0
         while h<=self.maxZ:
             self.heights.append(h)
@@ -96,6 +97,10 @@ class calculateDist:
         val = (10**exp) / 60
         return val
 
+    def printLNL(self):
+        total = self.LNL[0] + self.LNL[1]
+        return "LOS: " + str(self.LNL[0]/total*100) + "%     |       NLOS: " + str(self.LNL[1]/total*100) + "%"
+
     def expConvert(self, dist):
         a = 76.95 ; b = 3.803e-41
         c = -50.55 ; d = -5.097e-40
@@ -122,6 +127,11 @@ class calculateDist:
                 euclid = self.distance(pt, tx)
                 rssiVal = self.Smap[pt[0]][pt[1]][j]
                 rssiDist = self.rssi2Dist(rssiVal)/self.unit
+                
+                # LOS/ NLOS Labels in Path
+                if label==0 : self.LNL[0] = self.LNL[0] + 1
+                if label==1 : self.LNL[1] = self.LNL[1] + 1
+                
                 if math.isinf(rssiVal) or math.isinf(rssiDist): continue
                 APMap.append(distanceMap(rssiDist, euclid, label))
                 if self.csv: fW.writerow([label, rssiDist, euclid, rssiVal])
@@ -153,6 +163,11 @@ class calculateDist:
                 euclid = self.distance(pt, tx)
                 rssiVal = self.Smap[idx][pt[0]][pt[1]][j]
                 rssiDist = self.rssi2Dist(rssiVal)/self.unit
+                                
+                # LOS/ NLOS Labels in Path
+                if label==0 : self.LNL[0] = self.LNL[0] + 1
+                if label==1 : self.LNL[1] = self.LNL[1] + 1
+                
                 APMap.append(distanceMap(rssiDist, euclid, label))
                 if self.csv: fW.writerow([label, rssiDist, euclid, rssiVal])
 

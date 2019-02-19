@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 from random import random, randint
 from numpy.random import randint as ri
 from pdb import set_trace as bp
+import scipy.io as sio
 
 # include pylayers map creator
 from include.createMap import createMap
@@ -23,17 +24,18 @@ from include.localize import localize
 # Parse Arguments
 ##############################################################
 parser = argparse.ArgumentParser(description='Radio-Inertial Localization')
-parser.add_argument('--map', type=int, default=1, metavar='map', help='input blueprint (default: 1), range 1-15')
-parser.add_argument('--dim', type=int, default=2, metavar='dim', help='dimension for localization (default: 2)')
-parser.add_argument('--z', type=int, default=2, metavar='maxZ', help='maximum height of workspace (default: 2)')
-parser.add_argument('--np', type=int, default=3000, metavar='num particles', help='number of particles for localization (default: 3000)')
-parser.add_argument('--iter', type=int, default=4, metavar='RRT iterations', help='number of iterations for RRT (default: 4 (implies 10^4))')
-parser.add_argument('--step', type=int, default=3, metavar='RRT step', help='step size for RRT (default: 3)')
-parser.add_argument('--su', type=float, default=0.8, metavar='motion noise', help='action model noise (default: 0.8)')
-parser.add_argument('--R', type=int, default=10, metavar='sensing range', help='sensing range of robot (default: 10)')
-parser.add_argument('--slam', type=int, default=0, metavar='slam', help='use Fast SLAM(FS) or Particle Filter(PF) (default: 0 (PF))')
-parser.add_argument('--useClas', type=int, default=0, metavar='use classifier', help='use classifier or not (default: 0)')
-parser.add_argument('--hard', type=int, default=0, metavar='hard classification', help='use hard or soft classification (default: 0 (soft))')
+parser.add_argument('--map', type=int, default=1, metavar='input blueprint (default: 1), range 1-15')
+parser.add_argument('--dim', type=int, default=2, metavar='dimension for localization (default: 2)')
+parser.add_argument('--z', type=int, default=2, metavar='maximum height of workspace (default: 2)')
+parser.add_argument('--np', type=int, default=3000, metavar='number of particles for localization (default: 3000)')
+parser.add_argument('--iter', type=int, default=4, metavar='number of iterations for RRT (default: 4 (implies 10^4))')
+parser.add_argument('--step', type=int, default=3, metavar='step size for RRT (default: 3)')
+parser.add_argument('--su', type=float, default=0.8, metavar='action model noise (default: 0.8)')
+parser.add_argument('--R', type=int, default=10, metavar='sensing range of robot (default: 10)')
+parser.add_argument('--slam', type=int, default=0, metavar='use Fast SLAM(FS) or Particle Filter(PF) (default: 0 (PF))')
+parser.add_argument('--useClas', type=int, default=0, metavar='use classifier or not (default: 0)')
+parser.add_argument('--hard', type=int, default=0, metavar='use hard or soft classification (default: 0 (soft))')
+parser.add_argument('--savemat', type=int, default=0, metavar='save mat file for plotting or not (default : 0 (no))')
 
 args = parser.parse_args()
 
@@ -98,10 +100,40 @@ localizer = localize(numP, sigU, sigZ, dists, mat, wayPts, senseR, dim, useClas,
 if slam==1:
     localizer.FastSLAM()
     print("The MSE in the localized path is:", localizer.MSE())
+    print("The point-wise error in localization is: ",localizer.getCDF())
+    print("The LOS/NLOS counts are: ", distMap.printLNL())
+    if useClas: print("The confidence values are [TP, FP, TN, FN]: ",localizer.confidence)
+    
     if dim == 2: mat.visualize(start, goal, wayPts, localizer.path, localizer.APLocs, localizer.IDs)
     if dim == 3: mat.visualize3D(start, goal, wayPts, localizer.path, localizer.APLocs, localizer.IDs)
 else:
     localizer.particleFilter()
     print("The MSE in the localized path is:", localizer.MSE())
+    print("The point-wise error in localization is: ",localizer.getCDF())
+    print("The LOS/NLOS counts are: ", distMap.printLNL())
+    if useClas: print("The confidence values are [TP, FP, TN, FN]: ",localizer.confidence)
+
     if dim == 2: mat.visualize(start, goal, wayPts, localizer.path)
     if dim == 3: mat.visualize3D(start, goal, wayPts, localizer.path)
+    
+if args.savemat:
+    dic = {}
+    dic['dim'] = dim
+    dic['start'] = start
+    dic['goal'] = goal
+    dic['slam'] = slam
+    dic['mse'] = localizer.MSE()
+    dic['errors'] = localizer.getCDF()
+    dic['confidence'] = localizer.confidence
+    dic['lnl'] = distMap.LNL
+    dic['waypts'] = wayPts
+    dic['path'] = localizer.path
+    dic['sigu'] = sigU
+    dic['sigz'] = sigZ
+    dic['R'] = senseR
+    dic['Tx'] = mat.Tx
+    dic['map'] = mat.map
+    if slam==0: dic['TX'] = mat.Tx
+    if slam==1: dic['TX'] = localizer.APLocs
+    if slam==1: dic['TX_ids'] = localizer.IDs
+    sio.savemat('trial.mat', dic)

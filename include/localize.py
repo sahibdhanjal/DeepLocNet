@@ -29,6 +29,7 @@ class localize:
         self.hard = hardClas
         self.modelpath = modelpath
         self.model = None
+        self.confidence = [0, 0, 0, 0]          # true positive, false positive, true negative, false negative
         if self.dim == 2: self.su = su[0:2]
         if self.use: self.load_model()
 
@@ -48,6 +49,12 @@ class localize:
             mse += self.distance(self.wayPts[i], self.path[i])
         mse = mse/len(self.pts)
         return mse
+    
+    def getCDF(self):
+        cdf = [0 for x in range(len(self.pts))]
+        for i in range(len(self.pts)):
+            cdf[i] = self.distance(self.wayPts[i], self.path[i])
+        return cdf
 
     def distrib(self):
         start = self.wayPts[0] ; samples = []
@@ -141,12 +148,25 @@ class localize:
                     if self.use:
                         if self.hard:
                             label = self.classify(z[j].rssi, d)
+
+                            # confidence matrix calculation
+                            if label==0 and z[j].label==0: self.confidence[0]= self.confidence[0]+1     # true positive
+                            elif label==0 and z[j].label==1: self.confidence[1]= self.confidence[1]+1   # false positive
+                            elif label==1 and z[j].label==1: self.confidence[2]= self.confidence[2]+1   # true negative
+                            elif label==1 and z[j].label==0: self.confidence[3]= self.confidence[3]+1   # false negative
+
                             if label==0:
                                 dz[j] = abs(z[j].rssi-d)
                         else:
                             inp = torch.tensor([z[j].rssi, d])
                             out = self.model(inp.float()).detach().numpy()
                             dz[j] = out[0]*abs(z[j].rssi-d) + out[1]*abs(z[j].rssi - normrnd(self.R,3))
+
+                            # confidence matrix calculation
+                            if out[0]>out[1] and z[j].label==0: self.confidence[0]= self.confidence[0]+1     # true positive
+                            elif out[0]>out[1] and z[j].label==1: self.confidence[1]= self.confidence[1]+1   # false positive
+                            elif out[0]<out[1] and z[j].label==1: self.confidence[2]= self.confidence[2]+1   # true negative
+                            elif out[0]<out[1] and z[j].label==0: self.confidence[3]= self.confidence[3]+1   # false negative
                     else:
                         dz[j] = abs(z[j].rssi-d)
 
@@ -198,6 +218,13 @@ class localize:
                         if self.use:
                             if self.hard:
                                 label = self.classify(z[j].rssi, dHat)
+
+                                # confidence matrix calculation
+                                if label==0 and z[j].label==0: self.confidence[0]= self.confidence[0]+1     # true positive
+                                elif label==0 and z[j].label==1: self.confidence[1]= self.confidence[1]+1   # false positive
+                                elif label==1 and z[j].label==1: self.confidence[2]= self.confidence[2]+1   # true negative
+                                elif label==1 and z[j].label==0: self.confidence[3]= self.confidence[3]+1   # false negative
+
                                 if label==0:
                                     innov = abs(z[j].rssi-dHat)
                                 else:
@@ -206,6 +233,13 @@ class localize:
                                 inp = torch.tensor([z[j].rssi, dHat])
                                 out = self.model(inp.float()).detach().numpy()
                                 innov = out[0]*abs(z[j].rssi - dHat) + out[1]*abs(z[j].rssi - normrnd(self.R,3))
+
+                                # confidence matrix calculation
+                                if out[0]>out[1] and z[j].label==0: self.confidence[0]= self.confidence[0]+1     # true positive
+                                elif out[0]>out[1] and z[j].label==1: self.confidence[1]= self.confidence[1]+1   # false positive
+                                elif out[0]<out[1] and z[j].label==1: self.confidence[2]= self.confidence[2]+1   # true negative
+                                elif out[0]<out[1] and z[j].label==0: self.confidence[3]= self.confidence[3]+1   # false negative
+
                         else:
                             innov = abs(z[j].rssi - dHat)
 
