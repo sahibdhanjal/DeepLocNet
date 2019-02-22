@@ -151,9 +151,9 @@ class localize:
 
                             # confidence matrix calculation
                             if label==0 and z[j].label==0: self.confidence[0]= self.confidence[0]+1     # true positive
-                            elif label==0 and z[j].label==1: self.confidence[1]= self.confidence[1]+1   # false positive
+                            elif label==0 and z[j].label==1: self.confidence[1]= self.confidence[1]+1   # false negative
                             elif label==1 and z[j].label==1: self.confidence[2]= self.confidence[2]+1   # true negative
-                            elif label==1 and z[j].label==0: self.confidence[3]= self.confidence[3]+1   # false negative
+                            elif label==1 and z[j].label==0: self.confidence[3]= self.confidence[3]+1   # false positive
 
                             if label==0:
                                 dz[j] = abs(z[j].rssi-d)
@@ -221,9 +221,9 @@ class localize:
 
                                 # confidence matrix calculation
                                 if label==0 and z[j].label==0: self.confidence[0]= self.confidence[0]+1     # true positive
-                                elif label==0 and z[j].label==1: self.confidence[1]= self.confidence[1]+1   # false positive
+                                elif label==0 and z[j].label==1: self.confidence[1]= self.confidence[1]+1   # false negative
                                 elif label==1 and z[j].label==1: self.confidence[2]= self.confidence[2]+1   # true negative
-                                elif label==1 and z[j].label==0: self.confidence[3]= self.confidence[3]+1   # false negative
+                                elif label==1 and z[j].label==0: self.confidence[3]= self.confidence[3]+1   # false positive
 
                                 if label==0:
                                     innov = abs(z[j].rssi-dHat)
@@ -236,9 +236,9 @@ class localize:
 
                                 # confidence matrix calculation
                                 if out[0]>out[1] and z[j].label==0: self.confidence[0]= self.confidence[0]+1     # true positive
-                                elif out[0]>out[1] and z[j].label==1: self.confidence[1]= self.confidence[1]+1   # false positive
+                                elif out[0]>out[1] and z[j].label==1: self.confidence[1]= self.confidence[1]+1   # false negative
                                 elif out[0]<out[1] and z[j].label==1: self.confidence[2]= self.confidence[2]+1   # true negative
-                                elif out[0]<out[1] and z[j].label==0: self.confidence[3]= self.confidence[3]+1   # false negative
+                                elif out[0]<out[1] and z[j].label==0: self.confidence[3]= self.confidence[3]+1   # false positive
 
                         else:
                             innov = abs(z[j].rssi - dHat)

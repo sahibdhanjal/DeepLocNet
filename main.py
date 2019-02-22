@@ -87,7 +87,7 @@ if dim == 3: dists = distMap.readDistances3D()
 ##############################################################
 # Parameters for localization
 numP        = args.np                                       # number of particles used
-sigU        = [random()*su, random()*su, random()*su]       # motion model noise - typically a fraction of the step size
+sigU        = [random()*su, random()*su, random()*0.5*su]   # motion model noise - typically a fraction of the step size
 sigZ        = ri(10,100, size=mat.numAPs)                   # measure model noise
 senseR      = args.R                                        # sensing range
 useClas     = args.useClas                                  # use of classifier or not

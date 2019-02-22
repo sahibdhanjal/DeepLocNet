@@ -72,7 +72,7 @@ step  = args.step                                           # step size of rando
 
 
 for i in range(args.trials):
-    trialnum = 'trail'+str(i+1)+'.mat'
+    trialnum = 'trial'+str(i+1)+'.mat'
 
     RRT = calculatePath(start, goal, mat, step, dim, 10**args.iter)
     wayPts = RRT.RRTSearch()

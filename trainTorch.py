@@ -62,6 +62,46 @@ def get_accuracy(model, train_loader, test_loader, loss_func):
 
     return train_accuracy, test_accuracy
 
+def confusion(prediction, truth):
+    '''
+      p and t (prediction and truth)
+    - 1 and 1 (TN)
+    - 1 and 0 (FN)
+    - 0 and 0 (TP)
+    - 0 and 1 (FP)
+    '''
+    TN = 0; FN = 0; FP = 0; TP = 0
+
+    for i in range(len(prediction)):
+        if prediction[i].item()==0 and truth[i].item()==0:
+            TP += 1
+        if prediction[i].item()==1 and truth[i].item()==1:
+            TN += 1
+        if prediction[i].item()==1 and truth[i].item()==0:
+            FN += 1
+        if prediction[i].item()==0 and truth[i].item()==1:
+            FP += 1
+
+    return TN, FN, TP, FP
+
+def getconfusion(model, train_loader, test_loader, loss_func):
+    model.eval()
+    true_negative = 0 ; false_negative = 0
+    true_positive = 0 ; false_positive = 0
+
+    total = 0
+    for batch in test_loader:
+        data, labels = batch['data'].float().to(device), batch['label']
+        output = model(data)
+        _, predicted = torch.max(output.data, 1)
+        total += labels.size(0)
+        labels = np.argmax(labels, axis=1, out=None).to(device)
+        TN, FN, TP, FP = confusion(predicted, labels)
+        true_negative += TN ; true_positive += TP
+        false_negative += FN ; false_positive += FP
+    
+    return [TP, FP, TN, FN]
+
 
 if __name__=="__main__":
 
@@ -124,3 +164,6 @@ if __name__=="__main__":
 
     train_acc, test_acc = get_accuracy(model, train_loader, test_loader, loss_func)
     print("train_accuracy : {:.4f} |  test_accuracy : {:.4f}".format(train_acc, test_acc))
+    
+    CM = getconfusion(model, train_loader, test_loader, loss_func)
+    print("confusion matrix: \n{:.2f} {:.2f}\n{:.2f} {:.2f}". format(CM[2], CM[1], CM[3], CM[0]))
