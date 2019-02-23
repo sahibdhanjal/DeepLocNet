@@ -81,6 +81,37 @@ class DNN3(nn.Module):
             nn.ReLU(),
             nn.Linear(50, 100),
             nn.ReLU(),
+            nn.Linear(100, 200),
+            nn.ReLU(),
+            nn.Linear(200, 500),
+            nn.ReLU(),
+            nn.Linear(500, 1000),
+            nn.ReLU(),
+            nn.Linear(1000, 2000),
+            nn.ReLU(),
+            nn.Linear(2000, 2),
+            nn.ReLU(),
+            nn.Softmax(dim=-1),
+        )
+
+    def forward(self, x):
+        res = self.autoenc(x)
+        return res
+
+
+class DNN4(nn.Module):
+    def __init__(self):
+        super(DNN4, self).__init__()
+
+        self.autoenc = nn.Sequential(
+            nn.Linear(2, 10),
+            nn.ReLU(),
+            nn.Linear(10, 20),
+            nn.ReLU(),
+            nn.Linear(20, 50),
+            nn.ReLU(),
+            nn.Linear(50, 100),
+            nn.ReLU(),
             nn.Linear(100, 2),
             nn.ReLU(),
             nn.Softmax(dim=-1),
@@ -89,3 +120,49 @@ class DNN3(nn.Module):
     def forward(self, x):
         res = self.autoenc(x)
         return res
+
+
+class DNN5(nn.Module):
+    def __init__(self):
+        super(DNN5, self).__init__()
+
+        self.autoenc = nn.Sequential(
+            nn.Linear(2, 10),
+            nn.ReLU(),
+            nn.Linear(10, 20),
+            nn.ReLU(),
+            nn.Linear(20, 50),
+            nn.ReLU(),
+            nn.Linear(50, 100),
+            nn.ReLU(),
+            nn.Linear(100, 200),
+            nn.ReLU(),
+            nn.Linear(200, 500),
+            nn.ReLU(),
+            nn.Linear(500, 1000),
+            nn.ReLU(),
+            nn.Linear(1000, 2000),
+            nn.ReLU(),
+            nn.Linear(2000, 1000),
+            nn.ReLU(),
+            nn.Linear(1000, 500),
+            nn.ReLU(),
+            nn.Linear(500, 200),
+            nn.ReLU(),
+            nn.Linear(200, 100),
+            nn.ReLU(),
+            nn.Linear(100, 50),
+            nn.ReLU(),
+            nn.Linear(50, 20),
+            nn.ReLU(),
+            nn.Linear(20, 10),
+            nn.ReLU(),
+            nn.Linear(10, 2),
+            nn.ReLU(),
+            nn.Softmax(dim=-1),
+        )
+
+    def forward(self, x):
+        res = self.autoenc(x)
+        return res
+

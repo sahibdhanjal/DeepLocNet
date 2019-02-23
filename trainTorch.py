@@ -1,7 +1,7 @@
 import sys, os, torch, math
 import shutil, argparse
 import numpy as np
-from include.DNN import DNN
+from include.DNN import *
 from include.dataLoader import loadData
 from pdb import set_trace as bp
 
