@@ -238,7 +238,7 @@ class createMap:
         # display the actual AP locations
         x = []; y = [] ; z = []
         for i in Tx: x.append(i[0]/factX + minX); y.append(i[1]/factY + minY) ; z.append(i[2])
-        mlab.points3d(y, x, z, scale_factor=0.2, color=(1.0, 0.0, 0.0))
+        mlab.points3d(y, x, z, scale_factor=0.4, color=(1.0, 0.0, 0.0))
 
         # display the estimated AP locations
         if TX!=None and ID!=None:
@@ -247,8 +247,8 @@ class createMap:
                 pass
             else:
                 x = []; y = [] ; z = []
-                for i in Tx: x.append(i[0]/factX + minX); y.append(i[1]/factY + minY) ; z.append(i[2])
-                mlab.points3d(y, x, z, scale_factor=0.2, color=(0.0, 1.0, 0.0))
+                for i in TX: x.append(i[0]/factX + minX); y.append(i[1]/factY + minY) ; z.append(i[2])
+                mlab.points3d(y, x, z, scale_factor=0.4, color=(0.0, 1.0, 0.0))
         
         # display the waypoints by RRT
         if wayPts!=None:

@@ -415,7 +415,7 @@ class localize:
     def particleFilter(self):
         self.path.append(self.wayPts[0])
         samples = self.distrib()
-        print("Starting Particle Filter...")
+        print("Running Particle Filter ..")
 
         for i in range(len(self.pts)):
             # provide action update
@@ -429,7 +429,7 @@ class localize:
             mXY, _ = self.weightedMeanVar(samples)
             self.path.append(mXY)
 
-        print("Particle Filter has finished running....")
+        print("Particle Filter has finished running ..")
 
     '''
     The main Fast SLAM v1 class
@@ -437,7 +437,7 @@ class localize:
     def FastSLAM(self):
         self.path.append(self.wayPts[0])
         samples = self.distrib()
-        print("Starting Fast SLAM...")
+        print("Running Fast SLAM ..")
 
         for i in range(len(self.pts)):
             # provide action update
@@ -453,4 +453,4 @@ class localize:
 
         self.getAPLocs(samples)
 
-        print("FastSLAM has finished running....")
+        print("FastSLAM has finished running ..")
