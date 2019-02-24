@@ -19,6 +19,7 @@ from include.localize import localize
 
 # include real WiFi Scanner (optional)
 # from include.wifiScanner import *
+# from include.scannerUbuntu import *
 
 ##############################################################
 # Parse Arguments
@@ -103,7 +104,7 @@ if slam==1:
     print("The point-wise error in localization is: ",localizer.getCDF())
     print("The LOS/NLOS counts are: ", distMap.printLNL())
     if useClas: print("The confidence values are [TP, FP, TN, FN]: ",localizer.confidence)
-    
+
     if dim == 2: mat.visualize(start, goal, wayPts, localizer.path, localizer.APLocs, localizer.IDs)
     if dim == 3: mat.visualize3D(start, goal, wayPts, localizer.path, localizer.APLocs, localizer.IDs)
 else:

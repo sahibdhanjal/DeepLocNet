@@ -415,6 +415,8 @@ class localize:
     def particleFilter(self):
         self.path.append(self.wayPts[0])
         samples = self.distrib()
+        print("Starting Particle Filter...")
+
         for i in range(len(self.pts)):
             # provide action update
             self.motion_model(samples, self.pts[i], self.su)
@@ -435,6 +437,7 @@ class localize:
     def FastSLAM(self):
         self.path.append(self.wayPts[0])
         samples = self.distrib()
+        print("Starting Fast SLAM...")
 
         for i in range(len(self.pts)):
             # provide action update

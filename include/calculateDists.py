@@ -138,7 +138,7 @@ class calculateDist:
 
             distMap.append(APMap)
 
-        print("Distances mapped on Grid!")
+        print("All distances mapped on grid!")
         return distMap
 
     def readDistances3D(self):
@@ -172,5 +172,5 @@ class calculateDist:
                 if self.csv: fW.writerow([label, rssiDist, euclid, rssiVal])
 
             distMap.append(APMap)
-        print("Distances mapped on Grid!")
+        print("All distances mapped on grid!")
         return distMap

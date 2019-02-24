@@ -1,6 +1,8 @@
 import numpy as np
 from pylayers.gis.layout import Layout
 from pylayers.antprop.coverage import *
+from pylayers.simul.link import *
+from mayavi import mlab
 from pdb import set_trace as bp
 from math import sqrt, floor, ceil
 import matplotlib.pyplot as plt
@@ -82,7 +84,7 @@ class createMap:
         self.resolution = 0.5                           # distances at which each map is created
         self.factor = None                              # X conversion of map to grid coordinates
         self.min = None                                 # minX factor to be added to AP Loc
-        
+        self.DL = DLink(L=self.C.L)                     # DLink for 3D plotting
         self.getMap()
         self.parseAPs()
 
@@ -225,73 +227,42 @@ class createMap:
 
         plt.show()
 
-
-    def visual(self, start=None, goal=None, wayPts = None, path = None, TX = None, ID = None):
-        fig = plt.figure()
-        ax = fig.gca(projection='3d')
-        
-        if wayPts!=None:
-            x = [] ; y = [] ; z = []
-            for i in wayPts: x.append(i[0]) ; y.append(i[1]) ; z.append(i[2])
-            ax.plot(x, y, z, label='waypts')
-
-        if path!=None:
-            xp = [] ; yp = [] ; zp = []
-            for i in wayPts: xp.append(i[0]) ; yp.append(i[1]) ; zp.append(i[2])
-            ax.plot(xp, yp, zp, label='path')
-        ax.set_xlabel('x')
-        ax.set_ylabel('y')
-        ax.set_zlabel('z')
-        ax.legend()
-        plt.show()
-
-
     def visualize3D(self, start=None, goal=None, wayPts=None, path=None, TX=None, ID=None):
         if self.dim == 2: raise ValueError("Use visualize() instead of visualize3D() for 2 dimensions")
         print("Displaying Floor Plan.")
-        plt.imshow(self.map, cmap="gray")
+        
+        [factX, factY] = self.factor
+        [minX, minY] = self.min
         Tx = self.Tx
-
-        # display the waypoints by RRT
-        if wayPts!=None:
-            rows = []; cols = []
-            for i in wayPts:
-                rows.append(i[0]); cols.append(i[1])
-            plt.plot(cols, rows, 'b.-')
-
+        
         # display the actual AP locations
-        if Tx!=None:
-            rows = []; cols = []
-            ctr = 1
-            for i in Tx:
-                rows.append(int(i[0])); cols.append(int(i[1]))
-                plt.text(i[1],i[0],"  AP "+str(ctr), color='black')
-                ctr += 1
-
-            plt.plot(cols, rows, 'kx')
-
-        # display the localized path
-        if path!=None:
-            rows = []; cols = []
-            for i in path:
-                rows.append(i[0]); cols.append(i[1])
-            plt.plot(cols, rows, 'c.-')
+        x = []; y = [] ; z = []
+        for i in Tx: x.append(i[0]/factX + minX); y.append(i[1]/factY + minY) ; z.append(i[2])
+        mlab.points3d(y, x, z, scale_factor=0.2, color=(1.0, 0.0, 0.0))
 
         # display the estimated AP locations
         if TX!=None and ID!=None:
-            rows = []; cols = []
-            ctr = 1
-            for i in TX:
-                rows.append(int(i[0])); cols.append(int(i[1]))
-                plt.text(i[1],i[0],"  AP "+str(ID[ctr-1]+1), color='red')
-                ctr += 1
-
-            plt.plot(cols, rows, 'rx')
+            if len(TX)==0: 
+                print("No AP detected")
+                pass
+            else:
+                x = []; y = [] ; z = []
+                for i in Tx: x.append(i[0]/factX + minX); y.append(i[1]/factY + minY) ; z.append(i[2])
+                mlab.points3d(y, x, z, scale_factor=0.2, color=(0.0, 1.0, 0.0))
         
-        plt.plot(start[1], start[0], 'gs', markersize=8)
-        plt.plot(goal[1], goal[0], 'rs', markersize=8)
+        # display the waypoints by RRT
+        if wayPts!=None:
+            x = []; y = [] ; z = []
+            for i in wayPts: x.append(i[0]/factX + minX); y.append(i[1]/factY + minY) ; z.append(i[2])
+            mlab.plot3d(y, x, z, tube_radius=0.025, color=(1.0,1.0,1.0))
 
-        plt.show()
+        # display the localized path
+        if path!=None:
+            x = []; y = [] ; z = []
+            for i in path: x.append(i[0]/factX + minX); y.append(i[1]/factY + minY) ; z.append(i[2])
+            mlab.plot3d(y, x, z, tube_radius=0.025, color=(0.0,0.0,0.0))
+
+        self.DL._show3(ant=False)
 
     '''
     visualize only the strength map for one or all
