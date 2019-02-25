@@ -96,7 +96,7 @@ senseR      = args.R                                        # sensing range
 useClas     = args.useClas                                  # use of classifier or not
 hardClas    = args.hard                                     # use soft vs hard classification
 slam        = args.slam                                     # use fast slam or particle filter
-viz3D       = True                                          # visualize only 3D in both 2D/3D localization cases
+viz3D       = False                                         # visualize only 3D in both 2D/3D localization cases
 
 # Run the localization algorithms
 localizer = localize(numP, sigU, sigZ, dists, mat, wayPts, senseR, dim, useClas, hardClas)
