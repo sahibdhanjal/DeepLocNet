@@ -7,8 +7,8 @@ import numpy as np
 class calculatePath:
     def __init__(self, start, goal, mat, step, dim = 2, maxIter = 1e4, viz = False):
         self.dim = dim
-        self.start = start
-        self.goal = goal
+        self.start = start[0:2]
+        self.goal = goal[0:2]
         self.map = mat.map
         self.ap = mat.numAPs
         self.step = step
@@ -22,23 +22,16 @@ class calculatePath:
         self.randH = 1
         self.viz = viz
         self.wayPts = []
-        
-        if self.dim==2:
-            self.start = self.start[0:2]
-            self.goal = self.goal[0:2]
+        if self.dim==3: self.zdim = [start[2], goal[2]]
 
     def isValid(self, x):
         return (x[0]>=0 and x[0]<self.rows and x[1]>=0 and x[1]<self.cols and self.map[x[0]][x[1]]==1)
 
     def isGoal(self, x):
-        if self.dim == 2: return (x[0]==self.goal[0] and x[1]==self.goal[1])
-        if self.dim == 3: return (x[0]==self.goal[0] and x[1]==self.goal[1] and x[2]==self.goal[2])
+        return (x[0]==self.goal[0] and x[1]==self.goal[1])
 
     def angle(self, x, y):
-        if self.dim == 2 : 
-            return math.atan2( (y[1]-x[1]) , (y[0]-x[0]) )
-        if self.dim == 3 : 
-            return math.acos( (x[0]*y[0] + x[1]*y[1] + x[2]*y[2]) / math.sqrt((x[0]**2 + x[1]**2 + x[2]**2)*(y[0]**2 + y[1]**2 + y[2]**2)) )
+        return math.atan2( (y[1]-x[1]) , (y[0]-x[0]) )
 
     def distance(self, x, y):
         if len(x)==3 and len(y)==3:
@@ -53,12 +46,10 @@ class calculatePath:
         minDist = 999999999999
 
         for i in self.wayPts:
-            if self.dim == 2: dist = self.distance(self.goal, [i.x, i.y])
-            else : dist = self.distance(self.goal, [i.x, i.y, i.z])
+            dist = self.distance(self.goal, [i.x, i.y])
             if dist<minDist:
                 minDist = dist
-                if self.dim == 2 : point = [i.x, i.y]
-                if self.dim == 3 : point = [i.x, i.y, i.z]
+                point = [i.x, i.y]
 
         return point
 
@@ -69,12 +60,10 @@ class calculatePath:
         for row in range(self.rows):
             for col in range(self.cols):
                 if self.visited[row][col]!=0:
-                    if self.dim == 2: dist = self.distance( point, [row,col])
-                    if self.dim == 3: z = self.maxZ*random() ; dist = self.distance( point, [row, col, z])
+                    dist = self.distance( point, [row,col])
                     if dist<minDist:
                         minDist = dist
-                        if self.dim == 2: closest = [row, col]
-                        else: closest = [row, col, z]
+                        closest = [row, col]
         return closest, minDist
 
     def inPath(self, curr, boundary = 10):
@@ -210,21 +199,14 @@ class calculatePath:
     def findParent(self, point):
         for i in self.wayPts:
             if i.x==point[0] and i.y==point[1]:
-                if self.dim == 2: return [i.px, i.py]
-                else : return [i.px, i.py, i.pz]
+                return [i.px, i.py]
 
     def getPath(self):
         path = []
-        if self.dim == 2:
-            if self.wayPts[-1].x == self.goal[0] and self.wayPts[-1].y == self.goal[1]:
-                last = self.goal
-            else:
-                last = self.nearestToGoal()
+        if self.wayPts[-1].x == self.goal[0] and self.wayPts[-1].y == self.goal[1]:
+            last = self.goal
         else:
-            if self.wayPts[-1].x == self.goal[0] and self.wayPts[-1].y == self.goal[1] and self.wayPts[-1].z == self.goal[2]:
-                last = self.goal
-            else:
-                last = self.nearestToGoal()
+            last = self.nearestToGoal()
         path.append(last)
 
         while last[0]!=None and last[1]!=None:
@@ -232,16 +214,19 @@ class calculatePath:
             if parent[0]!=None and parent[1]!=None:
                 path.append(parent)
             last = parent
-
         path.reverse()
+
+        if self.dim==3:
+            path[0].append(self.zdim[0])
+            for i in range(1, len(path)): path[i].append(max(0,self.zdim[0] + random()*abs(self.zdim[1] - self.zdim[0])))
+        
         return path
 
     def RRTSearch(self):
         goalBias = 100
         ctr = 1
         self.visited[self.start[0]][self.start[1]] = ctr
-        if self.dim == 2: pt = Point(self.start[0], self.start[1])
-        if self.dim == 3: pt = Point(self.start[0], self.start[1], self.start[2])
+        pt = Point(self.start[0], self.start[1])
         self.wayPts.append(pt)
 
         print("Starting RRT Search..")
@@ -258,31 +243,25 @@ class calculatePath:
                 print("Number of Iterations: {:4}".format(it+1), end="\r")
 
                 if self.randH == 2:
-                    if self.dim==2: point = [ (self.goal[0] + goalBias - 2*goalBias*random()) , (self.goal[1] + goalBias - 2*goalBias*random())]
-                    if self.dim==3: point = [ (self.goal[0] + goalBias - 2*goalBias*random()) , (self.goal[1] + goalBias - 2*goalBias*random()), (self.goal[2] + goalBias - 2*goalBias*random())]
+                    point = [ (self.goal[0] + goalBias - 2*goalBias*random()) , (self.goal[1] + goalBias - 2*goalBias*random())]
 
                 else:
-                    if self.dim==2: point = [self.rows*random(), self.cols*random()]
-                    if self.dim==3: point = [self.rows*random(), self.cols*random(), self.maxZ*random()]
+                    point = [self.rows*random(), self.cols*random()]
 
                 curr,_ = self.findClosest(point)
                 ang = self.angle(curr, point)
-                if self.dim == 2 : temp = [ (curr[0] + round(self.step*math.cos(ang))) , (curr[1] + round(self.step*math.sin(ang))) ]
-                else : temp = [ (curr[0] + round(self.step*math.cos(ang))) , (curr[1] + round(self.step*math.sin(ang))) , curr[2] ]
-
+                temp = [ (curr[0] + round(self.step*math.cos(ang))) , (curr[1] + round(self.step*math.sin(ang))) ]
+                
                 if self.isValid(temp) and not self.inPath(temp) and not self.obstruction(temp, curr):
                     ctr += 1
                     # add point to waypoint array
-                    if self.dim==2: pt = Point(temp[0], temp[1], None, curr[0], curr[1], None)
-                    else: pt = Point(temp[0], temp[1], temp[2], curr[0], curr[1], curr[2])
+                    pt = Point(temp[0], temp[1], None, curr[0], curr[1], None)
                     self.wayPts.append(pt)
 
                     if self.isGoal(temp) or self.nearGoal(temp):
                         self.goalFound = 1
-                        if self.dim == 2: pt = Point(self.goal[0], self.goal[1], None, temp[0], temp[1])
-                        if self.dim == 3: pt = Point(self.goal[0], self.goal[1], self.goal[2], temp[0], temp[1], temp[2])
+                        pt = Point(self.goal[0], self.goal[1], None, temp[0], temp[1])
                         self.wayPts.append(pt)
-
 
                     curr = temp
                     self.visited[curr[0]][curr[1]] = ctr

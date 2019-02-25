@@ -10,10 +10,11 @@ from mpl_toolkits.mplot3d import Axes3D
 
 class parseMap:
     def __init__(self, L, rows, cols):
-        self.map = np.ones((rows,cols), dtype=int).T
+        self.map = np.ones((cols,rows), dtype=int)
         self.unit = 0
         self.factor = None
         self.min = None
+        self.bdist = [99999, 99999]
         self.parse(L, rows, cols)
 
     def parse(self, L, rows, cols):
@@ -34,10 +35,17 @@ class parseMap:
         for i in edges:
             if 'AIR' in G.node[i]['name'] or 'WOOD' in G.node[i]['name'] or 'PILLLAR' in G.node[i]['name'] or 'GLASS' in G.node[i]['name'] or 'WINDOW' in G.node[i]['name']:
                 continue
+
             v1, v2 = G.node[i]['connect']
             v1x, v1y = G.pos[v1]
             v2x, v2y = G.pos[v2]
-            
+
+            # find where the first real min node is            
+            if v1x!=minX: self.bdist[0] = min(self.bdist[0], v1x)
+            if v2x!=minX: self.bdist[0] = min(self.bdist[0], v2x)
+            if v1y!=minY: self.bdist[1] = min(self.bdist[1], v1y)
+            if v2y!=minY: self.bdist[1] = min(self.bdist[1], v2y)
+
             # shift origin
             v1x -= minX ; v1y -= minY
             v2x -= minX ; v2y -= minY
@@ -68,7 +76,8 @@ class parseMap:
 
                 for i in range(rmin, rmax+1):
                     self.map[y][i] = 0
-
+        
+        
 class createMap:
     def __init__(self, name = 'test.ini', dim = 2, maxZ = 2):
         self.name = name                                # name of file
@@ -85,6 +94,7 @@ class createMap:
         self.factor = None                              # X conversion of map to grid coordinates
         self.min = None                                 # minX factor to be added to AP Loc
         self.DL = DLink(L=self.C.L)                     # DLink for 3D plotting
+        self.bdist = None                               # boundary distances
         self.getMap()
         self.parseAPs()
 
@@ -111,6 +121,7 @@ class createMap:
         self.pathUnit = parser.unit
         self.min = parser.min
         self.factor = parser.factor
+        self.bdist = parser.bdist
 
     '''
     Refer coverage.py - lines 843 onwards for details
@@ -127,7 +138,6 @@ class createMap:
         V = self.C.CmWp[0,:,:]
         U = self.reshapeMap(V)
         self.StrengthMap = 10*np.log10(U)
-        
     
     '''
     Refer coverage.py - lines 843 onwards for details
@@ -155,7 +165,6 @@ class createMap:
             print('Strength Calculated at level: {:.1f}'.format(h), end="\r")
         self.StrengthMap = np.array(self.StrengthMap)
         print()
-
 
     '''
     Reshapes from (x*y x 1 x nAP) to (x x y x nAP)
@@ -224,21 +233,26 @@ class createMap:
 
         if start : plt.plot(start[1], start[0], 'gs', markersize=6)
         if goal : plt.plot(goal[1], goal[0], 'rs', markersize=6)
-
+        
+        plt.gca().invert_yaxis()
         plt.show()
 
     def visualize3D(self, start=None, goal=None, wayPts=None, path=None, TX=None, ID=None):
-        if self.dim == 2: raise ValueError("Use visualize() instead of visualize3D() for 2 dimensions")
         print("Displaying Floor Plan.")
         
         [factX, factY] = self.factor
         [minX, minY] = self.min
+        [boundX, boundY] = self.bdist
         Tx = self.Tx
         
         # display the actual AP locations
         x = []; y = [] ; z = []
-        for i in Tx: x.append(i[0]/factX + minX); y.append(i[1]/factY + minY) ; z.append(i[2])
-        mlab.points3d(y, x, z, scale_factor=0.4, color=(1.0, 0.0, 0.0))
+        for i in Tx:
+            x.append(i[0]/factX + minX)
+            y.append(i[1]/factY + minY)
+            if self.dim==2: z.append(self.maxZ)
+            if self.dim==3: z.append(i[2])
+        mlab.points3d(y, x, z, scale_factor=0.4, color=(1.0, 1.0, 0.0))
 
         # display the estimated AP locations
         if TX!=None and ID!=None:
@@ -247,20 +261,40 @@ class createMap:
                 pass
             else:
                 x = []; y = [] ; z = []
-                for i in TX: x.append(i[0]/factX + minX); y.append(i[1]/factY + minY) ; z.append(i[2])
-                mlab.points3d(y, x, z, scale_factor=0.4, color=(0.0, 1.0, 0.0))
+                for i in TX: 
+                    x.append(i[0]/factX + minX)
+                    y.append(i[1]/factY + minY)
+                    if self.dim==2: z.append(self.maxZ)
+                    if self.dim==3: z.append(i[2])
+                mlab.points3d(y, x, z, scale_factor=0.4, color=(0.0, 1.0, 1.0))
         
         # display the waypoints by RRT
         if wayPts!=None:
             x = []; y = [] ; z = []
-            for i in wayPts: x.append(i[0]/factX + minX); y.append(i[1]/factY + minY) ; z.append(i[2])
+            for i in wayPts: 
+                x.append(i[0]/factX + minX)
+                y.append(i[1]/factY + minY)
+                if self.dim==2: z.append(0.3)
+                if self.dim==3: z.append(i[2])
             mlab.plot3d(y, x, z, tube_radius=0.025, color=(1.0,1.0,1.0))
 
         # display the localized path
         if path!=None:
             x = []; y = [] ; z = []
-            for i in path: x.append(i[0]/factX + minX); y.append(i[1]/factY + minY) ; z.append(i[2])
+            for i in path:
+                x.append(i[0]/factX + minX)
+                y.append(i[1]/factY + minY)
+                if self.dim==2: z.append(0.3)
+                if self.dim==3: z.append(i[2])
             mlab.plot3d(y, x, z, tube_radius=0.025, color=(0.0,0.0,0.0))
+        
+        if start: 
+            if self.dim==2: mlab.points3d(start[1]/factY + minY, start[0]/factX + minX, 0.3, scale_factor=0.6, color=(0.0, 1.0, 0.0))
+            if self.dim==3: mlab.points3d(start[1]/factY + minY, start[0]/factX + minX, start[2], scale_factor=0.6, color=(0.0, 1.0, 0.0))
+
+        if goal:
+            if self.dim==2: mlab.points3d(goal[1]/factY + minY, goal[0]/factX + minX, 0.3, scale_factor=0.6, color=(1.0, 0.0, 0.0))
+            if self.dim==3: mlab.points3d(goal[1]/factY + minY, goal[0]/factX + minX, goal[2], scale_factor=0.6, color=(1.0, 0.0, 0.0))
 
         self.DL._show3(ant=False)
 

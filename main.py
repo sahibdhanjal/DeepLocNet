@@ -46,7 +46,7 @@ args = parser.parse_args()
 # custom *.INI files
 inis        = ["defstr.ini", "office.ini", "11Dbibli.ini", "DLR.ini", "DLR2.ini", "Luebbers.ini", "TC2_METIS.ini", "TC1_METIS.ini", "W2PTIN.ini", "defdiff.ini", "defsthdiff.ini", "edge.ini", "homeK_vf.ini", "klepal.ini", "testair0.ini"] 
 # start configurations corresponding to *.INI file
-starts      = [[20,20,0.2], [25,90,0.4], [5,5,0.8], [20,15,1.0], [20,15,1.2], [2,2,1.4], [80,50,1.8], [15,25,2.0], [80,20,1.7], [10,10,1.5], [5,5,1.1], [10,10,0.7], [35,10,0.5], [5,40,0.3], [10,10,0.1]]
+starts      = [[20,20,0.2], [20,80,0.4], [5,5,0.8], [20,15,1.0], [20,15,1.2], [2,2,1.4], [80,50,1.8], [15,25,2.0], [80,20,1.7], [10,10,1.5], [5,5,1.1], [10,10,0.7], [35,10,0.5], [5,40,0.3], [10,10,0.1]]
 # goal configurations corresponding to *.INI file
 goals       = [[60,110,0.1], [18,15,0.3], [10,135,0.7], [20,55,0.5], [20,55,1.5], [50,50,1.3], [5,65,1.6], [65,125,1.8], [30,75,1.2], [24,53,1.4], [5,60,0.6], [50,60,0.4], [25,45,0.2], [20,80,1.8], [28,52,0.8]]
 # which map to select
@@ -76,6 +76,8 @@ step  = args.step                                           # step size of rando
 RRT = calculatePath(start, goal, mat, step, dim, 10**args.iter)
 wayPts = RRT.RRTSearch()
 
+if(len(wayPts)==1): print("No waypoints found! Try using a smaller step size using --step flag"); sys.exit()
+
 ##############################################################
 # Calculate RSSI and Actual Distances
 ##############################################################
@@ -94,6 +96,7 @@ senseR      = args.R                                        # sensing range
 useClas     = args.useClas                                  # use of classifier or not
 hardClas    = args.hard                                     # use soft vs hard classification
 slam        = args.slam                                     # use fast slam or particle filter
+viz3D       = True                                          # visualize only 3D in both 2D/3D localization cases
 
 # Run the localization algorithms
 localizer = localize(numP, sigU, sigZ, dists, mat, wayPts, senseR, dim, useClas, hardClas)
@@ -104,18 +107,24 @@ if slam==1:
     print("The point-wise error in localization is: ",localizer.getCDF())
     print("The LOS/NLOS counts are: ", distMap.printLNL())
     if useClas: print("The confidence values are [TP, FP, TN, FN]: ",localizer.confidence)
-
-    if dim == 2: mat.visualize(start, goal, wayPts, localizer.path, localizer.APLocs, localizer.IDs)
-    if dim == 3: mat.visualize3D(start, goal, wayPts, localizer.path, localizer.APLocs, localizer.IDs)
+    
+    if viz3D: 
+        mat.visualize3D(start, goal, wayPts, localizer.path, localizer.APLocs, localizer.IDs)
+    else:
+        if dim == 2: mat.visualize(start, goal, wayPts, localizer.path, localizer.APLocs, localizer.IDs)
+        if dim == 3: mat.visualize3D(start, goal, wayPts, localizer.path, localizer.APLocs, localizer.IDs)
 else:
     localizer.particleFilter()
     print("The MSE in the localized path is:", localizer.MSE())
     print("The point-wise error in localization is: ",localizer.getCDF())
     print("The LOS/NLOS counts are: ", distMap.printLNL())
     if useClas: print("The confidence values are [TP, FP, TN, FN]: ",localizer.confidence)
-
-    if dim == 2: mat.visualize(start, goal, wayPts, localizer.path)
-    if dim == 3: mat.visualize3D(start, goal, wayPts, localizer.path)
+    
+    if viz3D: 
+        mat.visualize3D(start, goal, wayPts, localizer.path)
+    else:
+        if dim == 2: mat.visualize(start, goal, wayPts, localizer.path)
+        if dim == 3: mat.visualize3D(start, goal, wayPts, localizer.path)
     
 if args.savemat:
     dic = {}
