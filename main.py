@@ -30,7 +30,7 @@ parser.add_argument('--dim', type=int, default=2, metavar='dimension for localiz
 parser.add_argument('--z', type=int, default=2, metavar='maximum height of workspace (default: 2)')
 parser.add_argument('--np', type=int, default=3000, metavar='number of particles for localization (default: 3000)')
 parser.add_argument('--iter', type=int, default=4, metavar='number of iterations for RRT (default: 4 (implies 10^4))')
-parser.add_argument('--step', type=int, default=3, metavar='step size for RRT (default: 3)')
+parser.add_argument('--step', type=float, default=3, metavar='step size for RRT (default: 3)')
 parser.add_argument('--su', type=float, default=0.8, metavar='action model noise (default: 0.8)')
 parser.add_argument('--R', type=int, default=10, metavar='sensing range of robot (default: 10)')
 parser.add_argument('--slam', type=int, default=0, metavar='use Fast SLAM(FS) or Particle Filter(PF) (default: 0 (PF))')
@@ -107,7 +107,7 @@ if slam==1:
     print("The point-wise error in localization is: ",localizer.getCDF())
     print("The LOS/NLOS counts are: ", distMap.printLNL())
     if useClas: print("The confidence values are [TP, FP, TN, FN]: ",localizer.confidence)
-    
+
     if viz3D: 
         mat.visualize3D(start, goal, wayPts, localizer.path, localizer.APLocs, localizer.IDs)
     else:
@@ -119,7 +119,7 @@ else:
     print("The point-wise error in localization is: ",localizer.getCDF())
     print("The LOS/NLOS counts are: ", distMap.printLNL())
     if useClas: print("The confidence values are [TP, FP, TN, FN]: ",localizer.confidence)
-    
+
     if viz3D: 
         mat.visualize3D(start, goal, wayPts, localizer.path)
     else:

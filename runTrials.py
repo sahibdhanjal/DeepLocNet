@@ -70,8 +70,10 @@ start = starts[mapID]                                       # start position for
 goal  = goals[mapID]                                        # goal position for random walk (chosen at random)
 step  = args.step                                           # step size of random walk
 
+mse = [0]*args.trials
 
 for i in range(args.trials):
+    print("trial number: ", i)
     trialnum = 'trial'+str(i+1)+'.mat'
 
     RRT = calculatePath(start, goal, mat, step, dim, 10**args.iter)
@@ -96,6 +98,7 @@ for i in range(args.trials):
     else:
         localizer.particleFilter()
     
+    mse[i] = localizer.MSE()
     if args.savemat:
         dic = {}
         dic['dim'] = dim
@@ -117,3 +120,7 @@ for i in range(args.trials):
         if slam==1: dic['TX'] = localizer.APLocs
         if slam==1: dic['TX_ids'] = localizer.IDs
         sio.savemat(trialnum, dic)
+
+dic = {}
+dic['mse'] = mse
+sio.savemat('MSE-50.mat', dic)

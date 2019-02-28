@@ -56,6 +56,5 @@ class WiFiScanner:
 if __name__ == "__main__":
     ssids = ['Vulture Aviation', 'MGuest']
     scanner = WiFiScanner(ssids)
-    scanner.update()
     scanner.print()
     
