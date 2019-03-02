@@ -133,7 +133,7 @@ if args.savemat:
     dic['goal'] = goal
     dic['slam'] = slam
     dic['mse'] = localizer.MSE()
-    dic['errors'] = localizer.getCDF()
+    dic['cdf'] = localizer.getCDF()
     dic['confidence'] = localizer.confidence
     dic['lnl'] = distMap.LNL
     dic['waypts'] = wayPts
