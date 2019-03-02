@@ -46,9 +46,7 @@ localizer = localizeExp(numP, sigU, sigZ, map, useClas, hardClas)
 localizer.FastSLAM()
 print("The MSE in the localized path is:", localizer.MSE())
 print("The point-wise error in localization is: ",localizer.getCDF())
-bp()
 print(localizer.path)
-print(localizer.APLocs)
 
 if args.savemat:
     dic = {}
@@ -59,11 +57,5 @@ if args.savemat:
     dic['sigu'] = sigU
     dic['sigz'] = sigZ
     dic['TXName'] = localizer.TXName
-    dic['numPts'] = localizer.numPts
-    dic['numAPs'] = localizer.numAPs
-    dic['maxZ'] = localizer.maxZ
-    dic['measure'] = localizer.measure
-    dic['name2MAC'] = localizer.name2MAC
-    dic['name2Pos'] = localizer.name2Pos
-    dic['measure'] = localizer.measure
+    dic['TX'] = localizer.APLocs
     sio.savemat('trial.mat', dic)

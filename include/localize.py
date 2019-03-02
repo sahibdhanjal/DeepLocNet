@@ -474,7 +474,6 @@ class localizeExp:
         self.measure = map.measure
         self.name2MAC = map.name2MAC
         self.name2Pos = map.name2Pos
-        self.measure = map.measure
 
         self.start = self.wayPts[0]
         self.su = su
@@ -605,7 +604,7 @@ class localizeExp:
         Qt = np.diag([5,5])
         Qt = Qt.tolist() ; totWt = 0
 
-        print("Iteration: " , wpID)
+        print("Iteration: " , wpID, end='\r')
 
         for i in range(self.np):
             for j in range(len(self.name2Pos)):
