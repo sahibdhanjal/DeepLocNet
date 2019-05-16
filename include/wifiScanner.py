@@ -13,74 +13,61 @@ Refer the docs here:
 
 #!/usr/bin/env python
 import subprocess
-import math
+import math, time
+from pdb import set_trace as bp
 
-# wifi signal class for each SSID
-class signal:
-    def __init__(self, parse, ssid):
-        self.SSID = "Hidden"
-        self.MAC = ""
-        self.RSSI = 0
-        self.dist = 0
-        self.parseSignal(parse, ssid)
-
-    # parse signal parameters to store SSID/MAC/RSSI/Dist
-    def parseSignal(self, parse, ssid):
-        for i in parse:
-            if "BSSID" in i:
-                self.MAC = i.split()[-1]
-            if "Signal" in i:
-                percent = i.split()[-1]
-                self.RSSI = max(self.RSSI, float(percent[:-1]))
-        self.getDist()
-
-        name = ssid.split(":")[-1].strip()
-        if name!="":
-            self.SSID = name
-
-    # convert RSSI to distance in m
-    def getDist(self):
-        fMhz = 2412     # frequency in MHz
-        exp = (47.55 - 20*math.log10(fMhz) + abs(self.RSSI))/20
-        self.dist = 10**exp
-
-    # print details
-    def print(self):
-        print("SSID : ", self.SSID, " | MAC Address : ", self.MAC, " | RSSI : ", self.RSSI, " | Distance", self.dist)
-
-
-# parse extracted data from command prompt
 class WiFiScanner:
-    def __init__(self):
-        self.networks = []
+    def __init__(self, ssids = None):
+        self.nametoMAC = {}
+        self.MACtoSignal = {}
         self.numNetworks = 0
-        self.getSSIDRaw()
+        self.ssids = ssids
+        self.update()
+
+    def parseSignal(self, signal):
+        vals = signal.split()
+        name = ' '.join(x for x in vals[0:len(vals)-7])
+        mac = vals[-7]
+        chan = vals[-6]
+        rssi = vals[-1]
+        return name, mac, rssi
 
     def print(self):
-        print(self.numNetworks," networks were discovered")
-        for i in self.networks:
-            i.print()
+        print("Printing SSIDS with MAC associations:  ")
+        for i in self.nametoMAC:
+            print(i, ": ", self.nametoMAC[i])
+        
+        print("\n\nPrinting MAC with rssi associations:  ")
+        for i in self.MACtoSignal:
+            print(i, ": ", self.MACtoSignal[i])
 
-    def parseSSID(self, signals):
-        idx = []
-
-        # find all places where SSID is present
-        for i in range(len(signals)):
-            if "SSID" in signals[i] and "BSSID" not in signals[i]:
-                idx.append(i)
-
-        # parse the whole info per SSID
-        prev = 0
-        for next in idx:
-            if next!=prev:
-                self.networks.append(signal(signals[prev:next], signals[next]))
-        self.networks.append(signal(signals[next:], signals[next]))
-
-        # update number of networks
-        self.numNetworks = len(self.networks)
-
-    def getSSIDRaw(self):
-        signals = subprocess.check_output(["netsh", "wlan", "show", "network", "mode=Bssid"])
+    def update(self):
+        signals = subprocess.check_output(["nmcli", "-f", "SSID,BSSID,CHAN,FREQ,RATE,SIGNAL", "dev", "wifi"])
         signals = signals.decode("ascii").replace("\r","").split("\n")[4:]
         signals[:] = [x for x in signals if x != ""]
-        self.parseSSID(signals)
+        
+        if len(signals) == 0:
+            print("Running 'nmcli dev wifi rescan' as NIC is inactive")
+            subprocess.run(["nmcli", "dev", "wifi", "rescan"])
+            time.sleep(2)
+
+        for signal in signals:
+            name, mac, rssi = self.parseSignal(signal)
+            
+            # add mac address association to name
+            if name in self.nametoMAC: 
+                if mac in self.nametoMAC[name]: pass
+                else: self.nametoMAC[name].append(mac)
+
+            else: self.nametoMAC[name] = [mac]
+            
+            # add rssi association to mac address
+            if mac in self.MACtoSignal: self.MACtoSignal[mac].append(rssi)
+            else: self.MACtoSignal[mac] = [rssi]
+
+
+if __name__ == "__main__":
+    ssids = ['Vulture Aviation', 'MGuest']
+    scanner = WiFiScanner(ssids)
+    scanner.print()
+    
