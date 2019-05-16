@@ -9,6 +9,7 @@ Refer the docs here:
 7. https://github.com/ksasmit/Wireless-and-Mobile-networks-Fingerprint-based-localization-of-mobile-devices/blob/master/main.cpp
 8. https://github.com/SamShue/RSSI-Localization-Simulator
 9. https://github.com/t-lohani/Netwok-side-Localization
+10. https://stackoverflow.com/questions/15797920/how-to-convert-wifi-signal-strength-from-quality-percent-to-rssi-dbm
 '''
 
 #!/usr/bin/env python
@@ -24,12 +25,14 @@ class WiFiScanner:
         self.ssids = ssids
         self.update()
 
+    def signalStrength2RSSI(self, rssi):
+        return max(-100, min(int(rssi)/2 - 100, -50))
+
     def parseSignal(self, signal):
         vals = signal.split()
         name = ' '.join(x for x in vals[0:len(vals)-7])
         mac = vals[-7]
-        chan = vals[-6]
-        rssi = vals[-1]
+        rssi = self.signalStrength2RSSI(vals[-1])
         return name, mac, rssi
 
     def print(self):
@@ -37,7 +40,7 @@ class WiFiScanner:
         for i in self.nametoMAC:
             print(i, ": ", self.nametoMAC[i])
         
-        print("\n\nPrinting MAC with rssi associations:  ")
+        print("\nPrinting MAC with rssi associations:  ")
         for i in self.MACtoSignal:
             print(i, ": ", self.MACtoSignal[i])
 
@@ -49,11 +52,9 @@ class WiFiScanner:
         if len(signals) == 0:
             print("Running 'nmcli dev wifi rescan' as NIC is inactive")
             subprocess.run(["nmcli", "dev", "wifi", "rescan"])
-            time.sleep(2)
 
         for signal in signals:
             name, mac, rssi = self.parseSignal(signal)
-            
             # add mac address association to name
             if name in self.nametoMAC: 
                 if mac in self.nametoMAC[name]: pass
@@ -70,4 +71,3 @@ if __name__ == "__main__":
     ssids = ['Vulture Aviation', 'MGuest']
     scanner = WiFiScanner(ssids)
     scanner.print()
-    
