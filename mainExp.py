@@ -29,7 +29,6 @@ args = parser.parse_args()
 ##############################################################
 # Parameters for RSSI Generation
 map = calculateDistExp()
-map.parseAll()
 
 ##############################################################
 # Run Particle Filter / Fast SLAM v1 depending on choice

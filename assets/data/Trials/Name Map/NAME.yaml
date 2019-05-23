@@ -1,0 +1,7 @@
+image: /home/fetch/Desktop/NAME.pgm
+resolution: 0.050000
+origin: [-14.168622, -11.115519, 0.000000]
+negate: 0
+occupied_thresh: 0.65
+free_thresh: 0.196
+
