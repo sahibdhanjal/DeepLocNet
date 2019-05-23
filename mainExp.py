@@ -16,7 +16,7 @@ from include.localize import localizeExp
 ##############################################################
 parser = argparse.ArgumentParser(description='Radio-Inertial Localization')
 parser.add_argument('--dim', type=int, default=2, metavar='dimension for localization (default: 2)')
-parser.add_argument('--su', type=float, default=0.2, metavar='motion model noise (default: 0.2)')
+parser.add_argument('--su', type=float, default=0.3, metavar='motion model noise (default: 0.2)')
 parser.add_argument('--np', type=int, default=5000, metavar='number of particles for localization (default: 3000)')
 parser.add_argument('--useClas', type=int, default=0, metavar='use classifier or not (default: 0)')
 parser.add_argument('--hard', type=int, default=0, metavar='use hard or soft classification (default: 0 (soft))')

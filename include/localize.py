@@ -476,21 +476,20 @@ class localizeExp:
     def __init__(self, numP, su, sz, map, useClas, hardClas, modelpath="./models/best.pth"):
         self.np = numP
         self.sz = sz
-        
         self.dim = map.dim
         self.wayPts = map.wayPts
         self.pts = self.convert(self.wayPts)
-        self.nAP = map.numAPs
         self.dim = map.dim
         self.TXName = map.TXName
         self.numPts = map.numPts
         self.numAPs = map.numAPs
         self.maxZ = map.maxZ
-        self.measure = map.measure
+        self.dists = map.distMap
         self.name2MAC = map.name2MAC
         self.name2Pos = map.name2Pos
+        self.MAC2Name = map.MAC2Name
 
-        self.start = self.wayPts[0]
+        self.start = self.wayPts[0][:2]
         self.su = su
         self.path = []
         self.APLocs = []
@@ -624,73 +623,66 @@ class localizeExp:
         for i in range(self.np):
             for j in range(len(self.name2Pos)):
                 name = self.TXName[j]
-                if name in self.measure[wpID]:
-                    tx = np.array(self.name2Pos[name])[:2]; pos = np.array(samples[i].pose)[:2]
+                tx = np.array(self.name2Pos[name])
+                pos = np.array(samples[i].pose)
 
-                    # initialize particle map
-                    if name not in samples[i].mapID:
-                        samples[i].mapMu.append(tx)
-                        samples[i].mapSigma.append(Qt)
-                        samples[i].mapID.append(name)
-                        samples[i].hashMap[name] = len(samples[i].mapID) - 1
-                        samples[i].w = 1/self.np
+                # initialize particle map
+                if name not in samples[i].mapID:
+                    samples[i].mapMu.append(tx[:2])
+                    samples[i].mapSigma.append(Qt)
+                    samples[i].mapID.append(name)
+                    samples[i].hashMap[name] = len(samples[i].mapID) - 1
+                    samples[i].w = 1/self.np
 
-                    # update particle map
-                    else:
-                        ID = samples[i].hashMap[name]
+                # update particle map
+                else:
+                    ID = samples[i].hashMap[name]
 
-                        # prediction step
-                        muHat = samples[i].mapMu[ID]
-                        sigHat = np.array(samples[i].mapSigma[ID])
+                    # prediction step
+                    muHat = samples[i].mapMu[ID]
+                    sigHat = np.array(samples[i].mapSigma[ID])
 
-                        # update step
-                        dHat = self.distance(pos, muHat)
-                        
-                        rssiVal = self.measure[wpID][name]
-                        rssiDist = self.rssi2Dist(rssiVal)
+                    # update step
+                    dHat = self.distance(pos, muHat)
+                    rssiDist = self.dists[wpID][j].rssi
 
-                        # use classifier or not
-                        if self.use:
-                            if self.hard:
-                                label = self.classify(rssiDist, dHat)
-                                if label==0:
-                                    innov = abs(rssiDist-dHat)
-                                else:
-                                    continue
+                    # use classifier or not
+                    if self.use:
+                        if self.hard:
+                            label = self.classify(rssiDist, dHat)
+                            if label==0:
+                                innov = abs(rssiDist-dHat)
                             else:
-                                inp = torch.tensor([rssiDist, dHat])
-                                out = self.model(inp.float()).detach().numpy()
-                                innov = out[0]*abs(rssiDist - dHat) + out[1]*abs(rssiDist - normrnd(15,3))
-
+                                continue
                         else:
-                            innov = abs(rssiDist - dHat)
+                            inp = torch.tensor([rssiDist, dHat])
+                            out = self.model(inp.float()).detach().numpy()
+                            innov = out[0]*abs(rssiDist - dHat) + out[1]*abs(rssiDist - normrnd(15,3))
 
-                        
-                        dx = muHat[0] - pos[0] ; dy = muHat[1] - pos[1]
-                        den = math.sqrt(dx**2 + dy**2)
-                        H = np.array([dx/den, dy/den])
-                        
-                        if self.dim==3:
-                            dz = muHat[2] - pos[2]
-                            den = math.sqrt(dx**2 + dy**2 + dz**2)
-                            H = np.array([dx/den, dy/den, dz/den])
+                    else:
+                        innov = abs(rssiDist - dHat)
 
-                        try:
-                            Q = np.matmul(np.matmul(H, sigHat), H) + self.sz[j]
-                        except:
-                            bp()
+                    
+                    dx = muHat[0] - pos[0] ; dy = muHat[1] - pos[1]
+                    den = math.sqrt(dx**2 + dy**2)
+                    H = np.array([dx/den, dy/den])
+                    
+                    try:
+                        Q = np.matmul(np.matmul(H, sigHat), H) + self.sz[j]
+                    except:
+                        bp()
 
-                        # Kalman Gain
-                        K = np.matmul(sigHat, H)/Q
+                    # Kalman Gain
+                    K = np.matmul(sigHat, H)/Q
 
-                        # update pose/ covar
-                        mu = muHat + innov*K
-                        K = K.reshape((self.dim,1))
-                        sig = (np.identity(self.dim) - K*H)*sigHat
-                        samples[i].mapMu[ID] = mu.reshape((self.dim,))
-                        samples[i].mapSigma[ID] = sig.tolist()
-                        samples[i].w = max(samples[i].w, math.sqrt(2*math.pi*Q)*math.exp(-0.5*(innov**2)/Q))
-                        totWt += samples[i].w
+                    # update pose/ covar
+                    mu = muHat + innov*K
+                    K = K.reshape((self.dim,1))
+                    sig = (np.identity(self.dim) - K*H)*sigHat
+                    samples[i].mapMu[ID] = mu.reshape((self.dim,))
+                    samples[i].mapSigma[ID] = sig.tolist()
+                    samples[i].w = max(samples[i].w, math.sqrt(2*math.pi*Q)*math.exp(-0.5*(innov**2)/Q))
+                    totWt += samples[i].w
 
         # normalize the weights
         if totWt==0:
@@ -858,7 +850,7 @@ class localizeExp:
     The main Fast SLAM v1 class
     '''
     def FastSLAM(self):
-        self.path.append(self.wayPts[0])
+        self.path.append(self.wayPts[0][:2])
         samples = self.distrib()
         print("Running Fast SLAM ..")
         
