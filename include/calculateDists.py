@@ -178,7 +178,7 @@ class calculateDist:
 
 
 class calculateDistExp:
-    def __init__(self, waypts = 'assets/data/Trials/Trial1/waypts.csv', wifi = 'assets/data/Trials/Trial1/Wifi.csv'):
+    def __init__(self, waypts = 'assets/data/Trials/Trial1/odom.csv', wifi = 'assets/data/Trials/Trial1/wifi.csv'):
         self.wFile = waypts
         self.dim = 2
         self.TX = wifi

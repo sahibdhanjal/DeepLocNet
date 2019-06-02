@@ -20,7 +20,7 @@ orange = [255,110,0]/255;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Plot Map
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-I = imread('map_cropped.png');
+I = imread('NAME.pgm');
 figure; imagesc([0 100], [0 32], flipud(I));
 hold on, colormap gray, grid on
 set(gca,'ydir','normal');
