@@ -1,6 +1,20 @@
 # Radio Inertial SLAM
 This repository contains the simulation for Radio Inertial Localization using the [COST231 Radio Propagation Model](https://en.wikipedia.org/wiki/COST_Hata_model) and [Particle Filtering](http://ais.informatik.uni-freiburg.de/teaching/ws12/mapping/pdf/slam09-particle-filter-4.pdf). It contains 2 implementations: MATLAB (2D Localization only) and Python (2D and 3D Localization).
 
+## Citation
+If you use this work (paper or code), or draw inspiration from it, please cite the authors as follows:
+```
+@inproceedings{Dhanjal_2019,
+   title={DeepLocNet: Deep Observation Classification and Ranging Bias Regression for Radio Positioning Systems},
+   url={http://dx.doi.org/10.1109/IROS40897.2019.8967767},
+   DOI={10.1109/iros40897.2019.8967767},
+   booktitle={2019 IEEE/RSJ International Conference on Intelligent Robots and Systems (IROS)},
+   publisher={IEEE},
+   author={Dhanjal, Sahib Singh and Ghaffari, Maani and Eustice, Ryan M.},
+   year={2019},
+   month=nov }
+```
+
 ## Running the Simulation
 To run the simulation, you can open MATLAB and run ```randomWalk.m```. You can choose parameters for operation as specified in the program. The parameters of main interest are:
 
