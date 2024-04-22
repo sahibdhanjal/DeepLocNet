@@ -6,6 +6,20 @@ This branch contains the Python Simulator for Radio-Inertial Localization with s
 2. Tensorflow/Keras or Pytorch
 3. [PyLayers](http://pylayers.github.io/pylayers/)
 
+## Citation
+If you use this work (paper or code), or draw inspiration from it, please cite the authors as follows:
+```
+@inproceedings{Dhanjal_2019,
+   title={DeepLocNet: Deep Observation Classification and Ranging Bias Regression for Radio Positioning Systems},
+   url={http://dx.doi.org/10.1109/IROS40897.2019.8967767},
+   DOI={10.1109/iros40897.2019.8967767},
+   booktitle={2019 IEEE/RSJ International Conference on Intelligent Robots and Systems (IROS)},
+   publisher={IEEE},
+   author={Dhanjal, Sahib Singh and Ghaffari, Maani and Eustice, Ryan M.},
+   year={2019},
+   month=nov }
+```
+
 ## Installation
 Install Anaconda 3 and proceed with installing Pylayers as per their [manual](https://github.com/pylayers/pylayers/blob/master/INSTALL.md). Once installed, copy and paste all the ```*.ini``` files from the [```assets/inis```](assets/inis/) folder into the ```pylayers_project/ini/``` directory created by the Pylayers installation script. The directory defaults to```~/pylayers_project/ini/``` on Ubuntu. Since pylayers can be tricky to setup, I've attached my anaconda environment in [```pylayers.yml```](pylayers.yml). Commit [```6bbd9c5```](https://github.com/pylayers/pylayers/tree/6bbd9c58bc46e9e8df6d4d41a5b1635e142f91b2) worked best for me.
 
